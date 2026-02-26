@@ -1,0 +1,1143 @@
+<!doctype html>
+<!--
+  File: login_voucher.html
+  Project: JuanFi Login Portal (Voucher + Plastic)
+  Version: 1.0.1
+  Description:
+    - Updated clean UI (no shadows, no borders)
+    - Fonts ONLY: Poppins + Questrial
+    - Preserves MikroTik variables, forms, JS logic, and modals
+    - Redirects to status page after login using $(link-status)
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Plastech Login</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <!-- Existing libs -->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/css/toast.min.css" />
+    <link rel="stylesheet" href="assets/css/core.css" />
+    <link rel="stylesheet" href="assets/css/JuanFi.css" />
+
+    <!-- Fonts ONLY: Poppins + Questrial -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Questrial&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="assets/js/html5-qrcode.min.js" type="text/javascript"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/md5.js"></script>
+
+    <style>
+      /*
+        File: login_voucher_ui.css (inlined)
+        Version: 1.0.1
+        Notes:
+          - No shadows, no borders
+          - Minimal clean layout
+          - Only Poppins + Questrial
+      */
+
+      :root {
+        --BG0: #070b07;
+        --BG1: #0c120c;
+
+        --TEXT: rgba(255, 255, 255, 0.92);
+        --MUTED: rgba(255, 255, 255, 0.68);
+
+        --CARD: rgba(255, 255, 255, 0.06);
+        --SURFACE: rgba(255, 255, 255, 0.08);
+
+        --GREEN: #4eb323;
+        --GREEN2: #1a3a0a;
+
+        --BLUE: #2e86de;
+        --RED: #dc3545;
+
+        --RADIUS: 18px;
+        --RADIUS_BTN: 18px;
+
+        --PAD: 18px;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body#loginBody {
+        font-family: "Poppins", sans-serif;
+        background:
+          radial-gradient(
+            1200px 800px at 10% 10%,
+            rgba(78, 179, 35, 0.14),
+            transparent 55%
+          ),
+          radial-gradient(
+            1000px 700px at 90% 25%,
+            rgba(26, 58, 10, 0.28),
+            transparent 60%
+          ),
+          linear-gradient(180deg, var(--BG0), var(--BG1));
+        color: var(--TEXT);
+        margin: 0;
+      }
+
+      /* Disable shadows globally */
+      * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+      }
+
+      /* Remove borders broadly */
+      .card,
+      .modal-content,
+      .modal-header,
+      .modal-footer,
+      .progress,
+      .progress-bar,
+      .form-control,
+      .btn,
+      .dropdown-menu,
+      input,
+      select,
+      textarea {
+        border: none !important;
+        outline: none !important;
+      }
+
+      .container {
+        padding-top: 18px;
+        padding-bottom: 18px;
+      }
+
+      .shell {
+        width: 100%;
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      @media (min-width: 768px) {
+        .grid {
+          grid-template-columns: 0.9fr 1.1fr;
+          align-items: start;
+        }
+      }
+
+      .panel {
+        background: var(--CARD);
+        border-radius: var(--RADIUS);
+        padding: var(--PAD);
+      }
+
+      .brand-image {
+        border-radius: var(--RADIUS);
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .brand-image img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .meta-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .meta-pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .meta-pill img {
+        width: 18px;
+        height: 18px;
+        opacity: 0.95;
+      }
+
+      .meta-pill span {
+        font-family: "Questrial", sans-serif;
+        font-size: 14px;
+        color: var(--TEXT);
+        word-break: break-all;
+      }
+
+      .status-line {
+        margin-top: 14px;
+        font-size: 14px;
+        color: var(--MUTED);
+      }
+
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(220, 53, 69, 0.14);
+        color: var(--TEXT);
+        margin-top: 10px;
+        font-size: 14px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--RED);
+      }
+
+      @keyframes pulseOpacity {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.55;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .blinking1 {
+        animation: pulseOpacity 1.2s ease-in-out infinite;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .section-title h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+
+      .section-title small {
+        color: var(--MUTED);
+        font-family: "Questrial", sans-serif;
+      }
+
+      .field {
+        margin-top: 10px;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--MUTED);
+        font-family: "Questrial", sans-serif;
+        font-size: 13px;
+      }
+
+      .form-control {
+        background: rgba(255, 255, 255, 0.06) !important;
+        color: var(--TEXT) !important;
+        border-radius: 14px !important;
+        padding: 12px 12px !important;
+        height: auto !important;
+        font-family: "Poppins", sans-serif !important;
+      }
+
+      select.form-control option {
+        color: #111;
+      }
+
+      .btn-stack {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .btn-clean {
+        width: 100%;
+        border-radius: var(--RADIUS_BTN);
+        padding: 12px 14px;
+        font-family: "Poppins", sans-serif;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        border: none !important;
+        outline: none !important;
+      }
+
+      .btn-clean:active {
+        transform: scale(0.98);
+      }
+
+      /* Subtle breathing for primary */
+      @keyframes breatheScale {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.06);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .btn-green {
+        background: var(--GREEN) !important;
+        color: #fff !important;
+      }
+
+      .btn-green.breathe {
+        animation: breatheScale 1.4s ease-in-out infinite;
+      }
+
+      .btn-green.breathe:active {
+        animation: none;
+        transform: scale(0.92);
+      }
+
+      .btn-deep {
+        background: var(--GREEN2) !important;
+        color: #fff !important;
+      }
+
+      .btn-neutral {
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: #fff !important;
+      }
+
+      .btn-blue {
+        background: rgba(46, 134, 222, 0.9) !important;
+        color: #fff !important;
+      }
+
+      .btn-red {
+        background: var(--RED) !important;
+        color: #fff !important;
+      }
+
+      .hint {
+        margin-top: 8px;
+        font-family: "Questrial", sans-serif;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      .divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 14px 0;
+        border-radius: 999px;
+      }
+
+      .footer {
+        margin-top: 14px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+        font-family: "Questrial", sans-serif;
+        font-size: 13px;
+      }
+
+      .footer a {
+        color: var(--GREEN);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      /* Modals */
+      .modal-content {
+        background: rgba(10, 14, 10, 0.96) !important;
+        color: var(--TEXT) !important;
+        border-radius: 18px !important;
+      }
+
+      .modal-header,
+      .modal-footer {
+        background: transparent !important;
+      }
+
+      .modal-title {
+        font-family: "Poppins", sans-serif;
+        font-weight: 800;
+      }
+
+      .close {
+        opacity: 0.9 !important;
+      }
+
+      .progress {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-radius: 999px !important;
+        height: 10px !important;
+      }
+
+      .progress-bar {
+        border-radius: 999px !important;
+      }
+
+      .inscoinholder {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-radius: 16px !important;
+        padding: 12px !important;
+        margin: 10px 0;
+      }
+
+      /* QR input hidden */
+      #qr-input-file {
+        opacity: 0;
+        position: absolute;
+        z-index: -1;
+      }
+
+      .qr-label {
+        cursor: pointer;
+        user-select: none;
+        font-family: "Questrial", sans-serif;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      /* Loader */
+      .spinner.hidden {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body id="loginBody">
+    $(if chap-id)
+    <form
+      name="sendin"
+      action="$(link-login-only)"
+      method="post"
+      style="display: none"
+    >
+      <input type="hidden" name="username" />
+      <input type="hidden" name="password" />
+
+      <!-- ✅ redirect to status page after login -->
+      <input type="hidden" name="dst" value="$(link-status)" />
+
+      <input type="hidden" name="popup" value="true" />
+    </form>
+
+    <script>
+      /*
+        File: login_auth.js (inlined)
+        Version: 1.0.1
+        Notes: Logic preserved; only dst redirect handled by the form above.
+      */
+      var mac = "$(mac)";
+      var uIp = "$(ip)";
+      var ImOnLogin = "1";
+      var ImOnStatus = "0";
+      var alertVoucher = "0";
+      var loginError = "";
+
+      function doLogin() {
+        var vc = $("#voucherInput").val();
+        setStorageValue("activeVoucher", vc);
+
+        var validity = getStorageValue(vc + "validity");
+        var tempValidity = getStorageValue(vc + "tempValidity");
+
+        if (tempValidity != null) {
+          var currentExpireDate = new Date();
+          if (validity != null) {
+            currentExpireDate = new Date(parseInt(validity));
+          }
+
+          var minutes = parseInt(tempValidity);
+          var expireDate = new Date(
+            currentExpireDate.getTime() + minutes * 60000,
+          );
+
+          var currentDate = new Date();
+          if (expireDate.getTime() < currentDate.getTime()) {
+            removeStorageValue(vc + "validity");
+            removeStorageValue(vc + "tempValidity");
+          } else {
+            setStorageValue(vc + "validity", expireDate.getTime() + "");
+            removeStorageValue(vc + "tempValidity");
+          }
+        }
+
+        document.sendin.username.value = vc;
+
+        if (loginOption == 0) {
+          document.sendin.password.value = hexMD5(
+            "$(chap-id)" + "" + "$(chap-challenge)",
+          );
+        } else {
+          document.sendin.password.value = hexMD5(
+            "$(chap-id)" + vc + "$(chap-challenge)",
+          );
+        }
+
+        document.sendin.submit();
+        return false;
+      }
+    </script>
+
+    <script type="text/javascript">
+      /*
+        File: login_member.js (inlined)
+        Version: 1.0.1
+      */
+      function doLoginMember() {
+        document.sendin.username.value = document.login.username.value;
+        document.sendin.password.value = hexMD5(
+          "$(chap-id)" + document.login.password.value + "$(chap-challenge)",
+        );
+        document.sendin.submit();
+        return false;
+      }
+    </script>
+    $(endif) $(if error)
+    <script>
+      loginError = "$(error)";
+    </script>
+    $(endif)
+
+    <div class="container">
+      <div class="shell">
+        <div class="grid">
+          <!-- LEFT -->
+          <div class="panel">
+            <div class="brand-image">
+              <img src="assets/MainPic.PNG" class="img-fluid" alt="Main" />
+            </div>
+
+            <div class="meta-row">
+              <div class="meta-pill">
+                <img src="assets/img/ip.png" width="20" height="20" alt="IP" />
+                <span>$(ip)</span>
+              </div>
+              <div class="meta-pill">
+                <img
+                  src="assets/img/mac.png"
+                  width="20"
+                  height="20"
+                  alt="MAC"
+                />
+                <span>$(mac)</span>
+              </div>
+            </div>
+
+            <div class="status-line">Status:</div>
+            <div class="status-chip">
+              <span class="dot" aria-hidden="true"></span>
+              <span class="blinking1">Disconnected</span>
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="panel">
+            <div class="section-title">
+              <h2>Connect</h2>
+              <small>Voucher / Rates</small>
+            </div>
+
+            <!-- NOTE: You asked before to remove vendo; if you want it removed,
+                 delete this block (or tell me and I’ll regenerate without it). -->
+            <div class="field" id="vendoSelectDiv">
+              <label for="vendoSelected">Select Vendo</label>
+              <select
+                class="form-control"
+                name="vendoSelected"
+                id="vendoSelected"
+              ></select>
+            </div>
+
+            <div class="btn-stack">
+              <button
+                type="button"
+                id="insertBtn"
+                onclick="
+                  insertBtnAction();
+                  return false;
+                "
+                class="btn btn-clean btn-green breathe"
+                data-toggle="modal"
+              >
+                INSERT COIN
+              </button>
+
+              <button
+                type="button"
+                id="promoRateBtn"
+                onclick="
+                  promoBtnAction();
+                  return false;
+                "
+                class="btn btn-clean btn-deep"
+              >
+                PROMO RATES
+              </button>
+
+              <button
+                type="button"
+                id="chargingBtn"
+                onclick="
+                  chargingBtnAction();
+                  return false;
+                "
+                class="btn btn-clean btn-neutral"
+              >
+                CHARGING STATION
+              </button>
+
+              <button
+                type="button"
+                id="memberLoginBtn"
+                class="btn btn-clean btn-blue"
+                data-toggle="modal"
+                data-target="#memberModal"
+              >
+                MEMBER LOGIN
+              </button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="field">
+              <label for="voucherInput">Voucher</label>
+              <input
+                type="text"
+                class="form-control"
+                id="voucherInput"
+                aria-describedby="voucherHelp"
+                placeholder="Enter voucher code..."
+              />
+
+              <div class="btn-stack" style="margin-top: 10px">
+                <button
+                  type="button"
+                  id="scanQrBtn"
+                  onclick="
+                    $('#scanQrModal').modal('show');
+                    return false;
+                  "
+                  class="btn btn-clean btn-blue"
+                >
+                  SCAN QR
+                </button>
+
+                <button
+                  type="button"
+                  id="connectBtn"
+                  onclick="
+                    doLogin();
+                    return false;
+                  "
+                  class="btn btn-clean btn-green"
+                >
+                  CONNECT
+                </button>
+              </div>
+
+              <div id="voucherHelp" class="hint">
+                Please enter voucher code if you have an existing voucher.
+              </div>
+            </div>
+
+            <div class="footer">
+              Powered by: <a href="#">Plastech</a> &copy; All rights reserved
+              2026
+            </div>
+
+            <!-- INSERT COIN MODAL -->
+            <div
+              class="modal fade"
+              id="insertCoinModal"
+              style="z-index: 1500"
+              data-backdrop="static"
+              data-keyboard="false"
+              tabindex="-1"
+              role="dialog"
+              aria-labelledby="insertCoinModalTitle"
+              aria-hidden="true"
+            >
+              <div
+                class="modal-dialog modal-dialog-centered modal-lg"
+                role="document"
+              >
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="insertCoinModalTitle">
+                      Please insert the coin
+                    </h5>
+                    <button
+                      type="button"
+                      class="close"
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+
+                  <div class="modal-body">
+                    <div class="progress" style="margin-bottom: 16px">
+                      <div
+                        id="progressDiv"
+                        class="progress-bar progress-bar-striped progress-bar-animated"
+                        role="progressbar"
+                        aria-valuenow="100"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        style="width: 100%"
+                      ></div>
+                    </div>
+
+                    <div class="inscoin">
+                      <center>
+                        <div class="inscoinholder">
+                          <span style="color: var(--MUTED)">Your code is</span
+                          ><br />
+                          <span id="codeGeneratedBlock">
+                            <span
+                              id="codeGenerated"
+                              style="
+                                font-size: 34px;
+                                font-weight: 800;
+                                color: var(--GREEN);
+                                letter-spacing: 2px;
+                                font-family: &quot;Poppins&quot;, sans-serif;
+                              "
+                              >*****</span
+                            >
+                          </span>
+                        </div>
+
+                        <div class="inscoinholder">
+                          <span
+                            id="totalCoin"
+                            style="
+                              font-size: 20px;
+                              font-weight: 800;
+                              color: #fff;
+                              font-family: &quot;Poppins&quot;, sans-serif;
+                            "
+                            >0</span
+                          ><span
+                            style="
+                              font-size: 20px;
+                              font-weight: 800;
+                              color: #fff;
+                              font-family: &quot;Poppins&quot;, sans-serif;
+                            "
+                            >.00 Php</span
+                          ><br />
+                          <span style="color: var(--MUTED)">Coin</span>
+                        </div>
+
+                        <div class="inscoinholder">
+                          <span
+                            id="totalTime"
+                            style="
+                              font-size: 20px;
+                              font-weight: 800;
+                              color: #fff;
+                              font-family: &quot;Poppins&quot;, sans-serif;
+                            "
+                          ></span
+                          ><br />
+                          <span style="color: var(--MUTED)">Time</span>
+                        </div>
+                      </center>
+                    </div>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      id="saveVoucherButton"
+                      onclick="
+                        saveVoucherBtnAction();
+                        return false;
+                      "
+                      class="btn btn-clean btn-green"
+                      data-dismiss="modal"
+                      style="width: auto"
+                    >
+                      Done
+                    </button>
+                    <button
+                      type="button"
+                      id="cncl"
+                      class="btn btn-clean btn-red"
+                      data-dismiss="modal"
+                      style="width: auto"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- PROMO RATES MODAL -->
+            <div
+              class="modal fade"
+              id="promoRatesModal"
+              tabindex="-1"
+              role="dialog"
+              aria-labelledby="promoRatesLabel"
+              aria-hidden="true"
+            >
+              <div
+                class="modal-dialog modal-dialog-centered modal-lg"
+                role="document"
+              >
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="promoRatesLabel">
+                      Promo Rates
+                    </h5>
+                    <button
+                      type="button"
+                      class="close"
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+
+                  <div class="modal-body">
+                    <center>
+                      <div
+                        id="rateTypeDiv"
+                        style="max-width: 320px; width: 100%"
+                      >
+                        <label for="rateType" class="rate-title"
+                          ><b>Rate Type</b></label
+                        >
+                        <select
+                          name="rateType"
+                          class="form-control"
+                          id="rateType"
+                          onChange="onRateTypeChange(this)"
+                        >
+                          <option value="1">Internet</option>
+                          <option value="2">Charging</option>
+                        </select>
+                      </div>
+                    </center>
+
+                    <br />
+                    <center>
+                      <div id="ratesBody"></div>
+                      <div id="totalTime"></div>
+                    </center>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-clean btn-red"
+                      data-dismiss="modal"
+                      style="width: auto"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CHARGING MODAL -->
+            <div
+              class="modal fade"
+              id="chargingModal"
+              tabindex="1"
+              role="dialog"
+              aria-labelledby="chargingLabel"
+              aria-hidden="true"
+            >
+              <div
+                class="modal-dialog modal-dialog-centered modal-lg"
+                role="document"
+              >
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="chargingLabel">
+                      Charging Station
+                    </h5>
+                    <button
+                      type="button"
+                      class="close"
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+
+                  <div class="modal-body">
+                    <center>
+                      <div id="chargingBody"></div>
+                    </center>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-clean btn-red"
+                      data-dismiss="modal"
+                      style="width: auto"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SCAN QR MODAL -->
+            <div
+              class="modal fade"
+              id="scanQrModal"
+              tabindex="-1"
+              role="dialog"
+              aria-labelledby="scanQrLabel"
+              aria-hidden="true"
+            >
+              <div
+                class="modal-dialog modal-dialog-centered modal-lg"
+                role="document"
+              >
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="scanQrLabel">Scan QR Code</h5>
+                    <button
+                      type="button"
+                      class="close"
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+
+                  <div class="modal-body">
+                    <div id="reader" width="200px" height="200px"></div>
+                    <center style="margin-top: 10px">
+                      <label for="qr-input-file" class="qr-label">
+                        Please click here to scan
+                        <img
+                          width="64"
+                          src="assets/img/camera-scan.gif"
+                          style="opacity: 0.3"
+                          alt="Scan"
+                        />
+                      </label>
+                      <br />
+                      <input
+                        type="file"
+                        id="qr-input-file"
+                        accept="image/*"
+                        capture
+                      />
+                    </center>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-clean btn-red"
+                      data-dismiss="modal"
+                      style="width: auto"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MEMBER MODAL -->
+            <div class="modal fade" id="memberModal" role="dialog">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button
+                      type="button"
+                      class="close"
+                      data-dismiss="modal"
+                      aria-label="Close"
+                    >
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+
+                  <div class="modal-body">
+                    <div class="memdiv">
+                      <center>
+                        <h4 class="modal-title" style="margin-bottom: 12px">
+                          <span style="color: #dfffd2; font-weight: 800"
+                            >Member Login</span
+                          >
+                        </h4>
+
+                        <form
+                          name="login"
+                          action="$(link-login-only)"
+                          method="post"
+                          $(if
+                          chap-id)
+                          onSubmit="return doLoginMember()"
+                          $(endif)
+                        >
+                          <input
+                            type="hidden"
+                            name="dst"
+                            value="$(link-orig)"
+                          />
+                          <input type="hidden" name="popup" value="true" />
+
+                          <div class="field" style="text-align: left">
+                            <label style="margin-bottom: 6px">Username</label>
+                            <input
+                              name="username"
+                              type="text"
+                              value="$(username)"
+                              class="form-control"
+                            />
+                          </div>
+
+                          <div class="field" style="text-align: left">
+                            <label style="margin-bottom: 6px">Password</label>
+                            <input
+                              name="password"
+                              type="password"
+                              class="form-control"
+                            />
+                          </div>
+
+                          <button
+                            class="btn btn-clean btn-green"
+                            type="submit"
+                            style="width: 100%; margin-top: 10px"
+                          >
+                            Login
+                          </button>
+                        </form>
+                      </center>
+                    </div>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-clean btn-red"
+                      data-dismiss="modal"
+                      style="width: auto"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /modals -->
+          </div>
+        </div>
+
+        <div id="loaderDiv" class="spinner hidden">
+          <center>
+            <img src="assets/loading.svg" alt="Loading" />
+          </center>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/popper.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/toast.min.js"></script>
+    <script src="assets/js/core.js"></script>
+
+    <script>
+      /*
+        File: relogin.js (inlined)
+        Version: 1.0.0
+      */
+      var reLogin = getStorageValue("reLogin");
+      if (reLogin == "1") {
+        setStorageValue("reLogin", "0");
+        doLogin();
+      }
+    </script>
+
+    <script src="overlay.js"></script>
+    <script>
+      /*
+        File: qr_scan.js (inlined)
+        Version: 1.0.0
+      */
+      function off() {
+        var el = document.getElementById("overlay");
+        if (el) el.style.display = "none";
+      }
+
+      (function initQrScan() {
+        var readerEl = document.getElementById("reader");
+        var fileinput = document.getElementById("qr-input-file");
+        if (!readerEl || !fileinput || typeof Html5Qrcode === "undefined")
+          return;
+
+        const html5QrCode = new Html5Qrcode("reader");
+
+        fileinput.addEventListener("change", (e) => {
+          if (!e.target.files || e.target.files.length === 0) return;
+
+          const imageFile = e.target.files[0];
+
+          html5QrCode
+            .scanFile(imageFile, true)
+            .then((decodedText) => {
+              $("#voucherInput").val(decodedText);
+              $("#scanQrModal").modal("hide");
+              fileinput.value = "";
+              return html5QrCode.clear();
+            })
+            .catch(() => {
+              alert("Scanned failed, please try again");
+              fileinput.value = "";
+              try {
+                html5QrCode.clear();
+              } catch (_) {}
+            });
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,892 @@
+<!doctype html>
+<!--
+  File: status_plastech_v2.html
+  Project: JuanFi Status Portal (PlasTech UI Integrated)
+  Version: 2.1.1
+  Description:
+    - Select Vendo REMOVED (UI + element removed)
+    - Clean PlasTech UI (no shadows, no borders)
+    - Fonts ONLY: Poppins + Questrial
+    - Preserves JuanFi status logic + MikroTik variables + modals + core.js hooks
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>PlasTech — Connection Status</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <!-- Existing libs -->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="assets/css/toast.min.css" />
+    <link rel="stylesheet" href="assets/css/core.css" />
+    <link rel="stylesheet" href="assets/css/JuanFi.css" />
+
+    <!-- Fonts ONLY: Poppins + Questrial -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Questrial&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="assets/js/config.js"></script>
+
+    <script>
+      var loginError = "";
+      var mac = "$(mac)";
+      var logoutUrl = "$(link-logout)";
+      var remainingTimer = null;
+    </script>
+
+    <style>
+      /*
+        File: status_plastech_ui.css (inlined)
+        Version: 2.1.1
+        Notes:
+          - No shadows, no borders
+          - Clean modern card layout
+          - Only Poppins + Questrial fonts
+      */
+
+      :root {
+        --BG0: #070b07;
+        --BG1: #0c120c;
+
+        --TEXT: rgba(255, 255, 255, 0.92);
+        --MUTED: rgba(255, 255, 255, 0.68);
+
+        --CARD: rgba(255, 255, 255, 0.06);
+
+        --GREEN: #4eb323;
+        --DEEP: #1a3a0a;
+        --RED: #dc3545;
+
+        --RADIUS: 18px;
+        --RADIUS_BTN: 18px;
+
+        --PAD: 18px;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background:
+          radial-gradient(
+            1200px 800px at 10% 10%,
+            rgba(78, 179, 35, 0.14),
+            transparent 55%
+          ),
+          radial-gradient(
+            1000px 700px at 90% 25%,
+            rgba(26, 58, 10, 0.28),
+            transparent 60%
+          ),
+          linear-gradient(180deg, var(--BG0), var(--BG1));
+        color: var(--TEXT);
+        margin: 0;
+      }
+
+      /* Kill shadows globally */
+      * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+      }
+
+      /* Remove borders broadly */
+      .card,
+      .modal-content,
+      .modal-header,
+      .modal-footer,
+      .progress,
+      .progress-bar,
+      .form-control,
+      .btn,
+      input,
+      select,
+      textarea {
+        border: none !important;
+        outline: none !important;
+      }
+
+      .container {
+        padding-top: 18px;
+        padding-bottom: 18px;
+      }
+
+      .shell {
+        width: 100%;
+        max-width: 980px;
+        margin: 0 auto;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      @media (min-width: 768px) {
+        .grid {
+          grid-template-columns: 0.9fr 1.1fr;
+          align-items: start;
+        }
+      }
+
+      .panel {
+        background: var(--CARD);
+        border-radius: var(--RADIUS);
+        padding: var(--PAD);
+      }
+
+      .brand-image {
+        border-radius: var(--RADIUS);
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .brand-image img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .meta-row {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .meta-pill {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .meta-pill img {
+        width: 18px;
+        height: 18px;
+        opacity: 0.95;
+      }
+
+      .meta-pill span {
+        font-family: "Questrial", sans-serif;
+        font-size: 14px;
+        color: var(--TEXT);
+        word-break: break-all;
+      }
+
+      /* Status chip */
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(78, 179, 35, 0.14);
+        color: var(--TEXT);
+        margin-top: 14px;
+        font-size: 14px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--GREEN);
+      }
+
+      @keyframes pulseOpacity {
+        0% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.55;
+        }
+        100% {
+          opacity: 1;
+        }
+      }
+
+      .blinking2 {
+        animation: pulseOpacity 1.2s ease-in-out infinite;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .section-title h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+
+      .section-title small {
+        color: var(--MUTED);
+        font-family: "Questrial", sans-serif;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      @media (min-width: 560px) {
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .stat {
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 14px;
+      }
+
+      .stat-label {
+        color: var(--MUTED);
+        font-family: "Questrial", sans-serif;
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+
+      .stat-value {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--TEXT);
+        line-height: 1.2;
+        word-break: break-word;
+      }
+
+      .subline {
+        margin-top: 8px;
+        font-family: "Questrial", sans-serif;
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .btn-stack {
+        display: grid;
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .btn-clean {
+        width: 100%;
+        border: none !important;
+        border-radius: var(--RADIUS_BTN);
+        padding: 12px 14px;
+        font-family: "Poppins", sans-serif;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+      }
+
+      .btn-clean:active {
+        transform: scale(0.98);
+      }
+
+      .btn-green {
+        background: var(--GREEN) !important;
+        color: #fff !important;
+      }
+
+      .btn-deep {
+        background: var(--DEEP) !important;
+        color: #fff !important;
+      }
+
+      .btn-red {
+        background: var(--RED) !important;
+        color: #fff !important;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        font-family: "Questrial", sans-serif;
+        font-size: 13px;
+      }
+
+      .footer a {
+        color: var(--GREEN);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      /* Modals */
+      .modal-content {
+        background: rgba(10, 14, 10, 0.96) !important;
+        color: var(--TEXT) !important;
+        border-radius: 18px !important;
+      }
+
+      .modal-header,
+      .modal-footer {
+        background: transparent !important;
+      }
+
+      .modal-title {
+        font-family: "Poppins", sans-serif;
+        font-weight: 800;
+      }
+
+      .progress {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-radius: 999px !important;
+        height: 10px !important;
+        overflow: hidden !important;
+      }
+
+      .progress-bar {
+        border-radius: 999px !important;
+      }
+
+      .inscoinholder {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-radius: 16px !important;
+        padding: 12px !important;
+        margin: 10px 0;
+      }
+
+      .spinner.hidden {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body id="loginBody">
+    <div class="container">
+      <div class="shell">
+        <form action="$(link-logout)" name="logout"></form>
+
+        <form action="$(link-logout)" name="forcelogout">
+          <input type="hidden" name="erase-cookie" value="true" />
+        </form>
+
+        <div class="grid">
+          <!-- LEFT PANEL -->
+          <div class="panel">
+            <div class="brand-image">
+              <img src="assets/MainPic.PNG" class="img-fluid" alt="Main" />
+            </div>
+
+            <div class="meta-row">
+              <div class="meta-pill">
+                <img src="assets/img/ip.png" alt="IP" />
+                <span>$(ip)</span>
+              </div>
+              <div class="meta-pill">
+                <img src="assets/img/mac.png" alt="MAC" />
+                <span>$(mac)</span>
+              </div>
+            </div>
+
+            <div class="status-chip">
+              <span class="dot" aria-hidden="true"></span>
+              <span>Status:</span>
+              <span
+                class="blinking2"
+                id="connectionStatus"
+                style="color: #dfffd2"
+                >Connected</span
+              >
+            </div>
+          </div>
+
+          <!-- RIGHT PANEL -->
+          <div class="panel">
+            <div class="section-title">
+              <h2>Session Overview</h2>
+              <small>Live status</small>
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="stat-label">Voucher</div>
+                <div class="stat-value">$(username)</div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-label">Remaining Time</div>
+                <div class="stat-value" id="remainTime">Loading...</div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-label">Expiration Time</div>
+                <div class="stat-value" id="expirationTime">Loading...</div>
+              </div>
+
+              <div class="stat">
+                <div class="stat-label">Data Usage</div>
+                <div class="subline">
+                  ↑
+                  <b style="color: var(--TEXT)">$(bytes-in-nice)</b>
+                  &nbsp;&nbsp; ↓
+                  <b style="color: var(--TEXT)">$(bytes-out-nice)</b>
+                </div>
+                <div class="subline">
+                  Remaining:
+                  <b style="color: var(--TEXT)">$(remain-bytes-total-nice)</b>
+                </div>
+              </div>
+            </div>
+
+            <div class="btn-stack">
+              <button
+                type="button"
+                class="btn-clean btn-green"
+                id="insertBtn"
+                data-insert-type="extend"
+                data-toggle="modal"
+                onclick="
+                  insertBtnAction();
+                  return false;
+                "
+              >
+                EXTEND TIME
+              </button>
+
+              <button
+                type="button"
+                class="btn-clean btn-deep"
+                id="promoRateBtn"
+                onclick="
+                  promoBtnAction();
+                  return false;
+                "
+              >
+                PROMO RATES
+              </button>
+
+              <button
+                type="button"
+                class="btn-clean btn-red"
+                id="pauseTimeBtn"
+                onclick="
+                  pause();
+                  return false;
+                "
+              >
+                PAUSE TIME
+              </button>
+
+              <button
+                type="button"
+                class="btn-clean btn-deep"
+                id="chargingBtn"
+                onclick="
+                  chargingBtnAction();
+                  return false;
+                "
+              >
+                CHARGING STATION
+              </button>
+            </div>
+
+            <div class="footer">
+              Powered by: <a href="">PlasTech</a> &copy; All rights reserved
+              2026
+            </div>
+          </div>
+        </div>
+
+        <div id="loaderDiv" class="spinner hidden">
+          <center><img src="assets/loading.svg" alt="Loading" /></center>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MODALS (PRESERVED IDS + STRUCTURE) ===================== -->
+
+    <!-- INSERT COIN MODAL -->
+    <div
+      class="modal fade"
+      id="insertCoinModal"
+      style="z-index: 1500"
+      data-backdrop="static"
+      data-keyboard="false"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="insertCoinModalTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="insertCoinModalTitle">
+              Please insert the coin
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div class="progress" style="margin-bottom: 16px">
+              <div
+                id="progressDiv"
+                class="progress-bar progress-bar-striped progress-bar-animated"
+                role="progressbar"
+                aria-valuenow="100"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                style="width: 100%"
+              ></div>
+            </div>
+
+            <div class="inscoin">
+              <center>
+                <div class="inscoinholder">
+                  <span style="color: var(--MUTED)">Your code is</span><br />
+                  <span id="codeGeneratedBlock">
+                    <span
+                      id="codeGenerated"
+                      style="
+                        font-size: 34px;
+                        font-weight: 800;
+                        color: var(--GREEN);
+                        letter-spacing: 2px;
+                        font-family: &quot;Poppins&quot;, sans-serif;
+                      "
+                      >*****</span
+                    >
+                  </span>
+                </div>
+
+                <div class="inscoinholder">
+                  <span
+                    id="totalCoin"
+                    style="
+                      font-size: 20px;
+                      font-weight: 800;
+                      color: #fff;
+                      font-family: &quot;Poppins&quot;, sans-serif;
+                    "
+                    >0</span
+                  ><span
+                    style="
+                      font-size: 20px;
+                      font-weight: 800;
+                      color: #fff;
+                      font-family: &quot;Poppins&quot;, sans-serif;
+                    "
+                    >.00 Php</span
+                  ><br />
+                  <span style="color: var(--MUTED)">Coin</span>
+                </div>
+
+                <div class="inscoinholder">
+                  <span
+                    id="totalTime"
+                    style="
+                      font-size: 20px;
+                      font-weight: 800;
+                      color: #fff;
+                      font-family: &quot;Poppins&quot;, sans-serif;
+                    "
+                  ></span
+                  ><br />
+                  <span style="color: var(--MUTED)">Time</span>
+                </div>
+              </center>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              id="saveVoucherButton"
+              data-save-type="extend"
+              onclick="
+                saveVoucherBtnAction();
+                return false;
+              "
+              class="btn btn-clean btn-green"
+              data-dismiss="modal"
+              style="width: auto"
+            >
+              Done
+            </button>
+            <button
+              type="button"
+              id="cncl"
+              class="btn btn-clean btn-red"
+              data-dismiss="modal"
+              style="width: auto"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMO RATES MODAL -->
+    <div
+      class="modal fade"
+      id="promoRatesModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="promoRatesLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="promoRatesLabel">Promo Rates</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <center>
+              <div id="rateTypeDiv" style="max-width: 320px; width: 100%">
+                <label for="rateType" class="rate-title"
+                  ><b>Rate Type</b></label
+                >
+                <select
+                  name="rateType"
+                  class="form-control"
+                  id="rateType"
+                  onChange="onRateTypeChange(this)"
+                >
+                  <option value="1">Internet</option>
+                  <option value="2">Charging</option>
+                </select>
+              </div>
+            </center>
+
+            <br />
+            <center>
+              <div id="ratesBody"></div>
+              <div id="totalTime"></div>
+            </center>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-clean btn-red"
+              data-dismiss="modal"
+              style="width: auto"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHARGING MODAL -->
+    <div
+      class="modal fade"
+      id="chargingModal"
+      tabindex="1"
+      role="dialog"
+      aria-labelledby="chargingLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="chargingLabel">Charging Station</h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <center>
+              <div id="chargingBody"></div>
+            </center>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-clean btn-red"
+              data-dismiss="modal"
+              style="width: auto"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== SCRIPTS ===================== -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/popper.min.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/toast.min.js"></script>
+    <script src="assets/js/core.js"></script>
+
+    <script>
+      /*
+        File: status_logic.js (inlined)
+        Version: 2.1.1
+        Notes: Preserves your provided logic.
+      */
+
+      var sessiontime = "$(session-time-left-secs)";
+      var uptime = "$(uptime-secs)";
+      var currentVoucher = "$(username)";
+      window.name = "hotspot_status";
+
+      $(document).ready(function () {
+        $("#expirationTime").html("Loading...");
+
+        setTimeout(function () {
+          fetchValidity(1);
+        }, 1000);
+
+        setStorageValue("activeVoucher", currentVoucher);
+
+        var time = sessiontime;
+
+        if (time == "0") {
+          $("#remainTime").html("Unlimited");
+        } else {
+          $("#remainTime").html(secondsToDhms(time));
+
+          remainingTimer = setInterval(function () {
+            time--;
+            $("#remainTime").html(secondsToDhms(time));
+
+            if (time <= 0) {
+              $.toast({
+                title: "Success",
+                content:
+                  "Time limit exceeded, Thank you for the purchase, will be logout shortly",
+                type: "success",
+                delay: 5000,
+              });
+
+              clearInterval(remainingTimer);
+              setTimeout(function () {
+                document.logout.submit();
+              }, 6000);
+            }
+          }, 1000);
+        }
+      });
+
+      function fetchValidity(retryNo) {
+        if (retryNo > 5) {
+          fallbackValidity();
+          return;
+        }
+
+        var macNoColon = replaceAll(mac, ":");
+
+        $.ajax({
+          type: "GET",
+          url: "/data/" + macNoColon + ".txt?query=" + new Date().getTime(),
+          success: function (data) {
+            if (typeof data === "string" && data.length > 50) {
+              setTimeout(function () {
+                fetchValidity(retryNo++);
+              }, 1000);
+              return;
+            }
+
+            var macData = (data || "").split("#");
+            var validityRaw = macData[1] || "";
+
+            var validityTime = null;
+
+            if (validityRaw.length > 15) {
+              validityTime = new Date(Date.parse(validityRaw));
+            } else if (validityRaw.length > 8) {
+              var dt = validityRaw.split(" ");
+              var yr = new Date().getFullYear();
+              validityTime = new Date(Date.parse(dt[0] + "/" + yr + " " + dt[1]));
+            } else if (validityRaw.length === 0) {
+              validityTime = null;
+            } else {
+              var curDate = new Date();
+              var m = curDate.getMonth() + 1;
+              var d = curDate.getDate();
+              var yr2 = curDate.getFullYear();
+              validityTime = new Date(
+                Date.parse(m + "/" + d + "/" + yr2 + " " + validityRaw)
+              );
+            }
+
+            if (validityTime != null && !isNaN(validityTime.getTime())) {
+              $("#expirationTime").html(validityTime.toLocaleString());
+            } else {
+              $("#expirationTime").html("No Expiration");
+            }
+          },
+          error: function () {
+            fallbackValidity();
+          },
+        });
+      }
+
+      function fallbackValidity() {
+        var validity = getStorageValue(currentVoucher + "validity");
+        if (validity != null) {
+          var validityTime = new Date(parseInt(validity));
+          if (!isNaN(validityTime.getTime())) {
+            $("#expirationTime").html(validityTime.toLocaleString());
+            return;
+          }
+        }
+        $("#expirationTime").html("Not Available");
+      }
+
+      $(if refresh-timeout)
+      setInterval(function () {
+        if (!insertingCoin) {
+          location.reload();
+        }
+      }, $(refresh-timeout-secs) * 1000);
+      $(endif)
+    </script>
+
+    <div id="loaderDiv" class="spinner hidden">
+      <center><img src="assets/loading.svg" alt="Loading" /></center>
+    </div>
+  </body>
+</html>
